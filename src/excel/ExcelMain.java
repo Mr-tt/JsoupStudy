@@ -2,8 +2,12 @@ package excel;
 
 
 import java.awt.Dimension;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 
 import javax.imageio.ImageIO;
@@ -15,6 +19,7 @@ import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamPanel;
 import com.github.sarxos.webcam.WebcamResolution;
 
+import FaceCompare.MyFaceDemo;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
@@ -30,6 +35,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -48,6 +54,8 @@ public class ExcelMain extends Application {
 	
 	private WebCamService service ;
 	private Webcam cam;
+	//用于保存拍照的图片
+	BufferedImage bImage;
 	
 	public void init() {
 		
@@ -63,11 +71,11 @@ public class ExcelMain extends Application {
 		cam = Webcam.getWebcams().get(0);
 		service = new WebCamService(cam);	
 		
-		cam.setCustomViewSizes(nonStandardResolutions);
+//		cam.setCustomViewSizes(nonStandardResolutions);
+//		cam.setViewSize(new Dimension(176,144));
 		cam.open();		
 //		System.err.println(WebcamResolution.HD.getSize());
 		
-//		cam.setViewSize(new Dimension(350,413));
 	}
 	
 	@Override
@@ -106,18 +114,28 @@ public class ExcelMain extends Application {
 		TextField kaohaoText = new TextField();
 		grid.add(kaohaoText, 1, 2);
 
-		// 创建登录按钮
+		// 创建审核按钮
 		Button btn = new Button("审核通过");
+		btn.setVisible(false);
 		HBox hbBtn = new HBox(10);
 		hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
 		hbBtn.getChildren().add(btn);// 将按钮控件作为子节点
 		grid.add(hbBtn, 1, 4);// 将HBox pane放到grid中的第1列，第4行
 
+		
 //		Button loginButton = new Button("登录");
 //		HBox hbBtn1 = new HBox(10);
 //		hbBtn1.setAlignment(Pos.BOTTOM_RIGHT);
 //		hbBtn1.getChildren().add(loginButton);// 将按钮控件作为子节点
 //		grid.add(hbBtn1, 2, 3);// 将HBox pane放到grid中的第1列，第4行
+		
+		Button searchBtn = new Button("查找该学生");
+		btn.setVisible(false);
+		HBox searchhbBtn = new HBox(10);
+		hbBtn.setAlignment(Pos.BOTTOM_LEFT);
+		hbBtn.getChildren().add(searchBtn);// 将按钮控件作为子节点
+		grid.add(searchBtn, 0, 4);// 将HBox pane放到grid中的第0列，第4行
+		
 
 		final Text actiontarget = new Text();// 增加用于显示信息的文本
 		grid.add(actiontarget, 1, 6);
@@ -132,27 +150,10 @@ public class ExcelMain extends Application {
 			e1.printStackTrace();
 		}
 		
-		// 给btn按钮绑定事件
+		// 给审核按钮btn按钮绑定事件
 		btn.setOnAction(new EventHandler<ActionEvent>() {// 注册事件handler
 			@Override
 			public void handle(ActionEvent e) {
-//				btn.setVisible(false);
-//				btn.setDisable(true);
-				
-//				 Stage stage = new Stage();
-//                 Label l = new Label("显示出来了");
-//                 Scene scene = new Scene(l,200,100);
-//                 stage.setScene(scene);
-//                 stage.show();
-				
-				
-				
-	           
-//				Alert alert = new Alert(AlertType.INFORMATION);
-//				alert.setTitle("提示框标题");
-//				alert.setHeaderText("Look, an Information Dialog");
-//				alert.setContentText("I have a great message for you!");
-//				alert.showAndWait();
 				
 				try {
 					actiontarget.setFill(Color.ALICEBLUE);
@@ -165,10 +166,10 @@ public class ExcelMain extends Application {
 						actiontarget.setText("写入成功");
 						studentText.setFill(Color.GREEN);
 						studentText.setText(s.toString());
-						
+						btn.setVisible(false);
 					}else{
 						actiontarget.setFill(Color.FIREBRICK);// 将文字颜色变成 firebrick red
-						actiontarget.setText("未查询到该考生，检查是否输入错误");
+						actiontarget.setText("请输入考生的身份证号，否则无法审核！");
 					}
 					
 				} catch (Exception e1) {
@@ -177,25 +178,28 @@ public class ExcelMain extends Application {
 					actiontarget.setText("非法操作！程序故障！请联系-海涛");
 				} 
 				
-				System.err.println();
-					
-				
-				
-				
 			}
 		});
 		
-		
-		//给登录按钮绑定事件
-//		loginButton.setOnAction(new EventHandler<ActionEvent>() {
-//
-//			@Override
-//			public void handle(ActionEvent event) {
-//				login();
-//				actiontarget.setFill(Color.DARKGREEN);
-//				actiontarget.setText("恭喜！登录成功,请查询！");
-//			}
-//		});
+		searchBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				actiontarget.setFill(Color.ALICEBLUE);
+				studentText.setFill(Color.ALICEBLUE);
+				Student s =  MyExcel.search(userTextField.getText());
+				if(s!=null){
+					actiontarget.setFill(Color.GREEN);// 将文字颜色变成 firebrick red
+					actiontarget.setText("找到该学生\r");
+					studentText.setFill(Color.GREEN);
+					studentText.setText(s.toString());
+					
+				}else{
+					actiontarget.setFill(Color.FIREBRICK);// 将文字颜色变成 firebrick red
+					actiontarget.setText("未查询到该考生，检查是否输入错误");
+				}
+			}
+		});
+
 		
 		//增加摄像头-拍照功能
 		Button startStop = new Button();
@@ -213,38 +217,131 @@ public class ExcelMain extends Application {
 			}
 		});	
 		
+		//保存照片的按钮
+		Button savePhotoBtn = new Button("是否保存照片");
+		savePhotoBtn.setVisible(false);
 		//拍照按钮
 		Button paizhao = new Button("拍照");
+		
 		paizhao.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				try {
-					
-					ImageIO.write(cam.getImage(), "PNG", new File("/Users/yehaitao/Desktop/test/程序截图/"+System.currentTimeMillis()+".png"));
 				
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				savePhotoBtn.setVisible(true);
+				//bufferImage --转--InputStream
+				bImage = cam.getImage();
+				ByteArrayOutputStream os = new ByteArrayOutputStream();
+				try {
+					ImageIO.write(bImage, "png", os);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				InputStream is = new ByteArrayInputStream(os.toByteArray());
+				
+				Image image = new Image(is);
+				ImageView imageview = new ImageView(image);
+//				imageview.setFitHeight(50); //设置照片大小
+//				imageview.setFitWidth(50);
+				
+				grid.add(imageview, 15,0,9,4);	
+				
+				//显示保存照片按钮
+				
+				
+			}
+		});
+		
+		//存储照片按钮绑定事件
+		savePhotoBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				
+				System.out.println("***"+kaohaoText.getText());
+				String s = kaohaoText.getText();
+				if(!s.isEmpty()){  //如果未填考号弹出提示框，要求先填考号才能保存照片
+					Alert alert = new Alert(AlertType.CONFIRMATION);
+					alert.setTitle("照片确认-Design By HaiTao");
+					alert.setHeaderText("考试照片如下：");
+					alert.setContentText("是否保存?");
+					Optional<ButtonType> result = alert.showAndWait();
+					if (result.get() == ButtonType.OK){
+						// ... user chose OK
+						try {
+							
+							ImageIO.write(bImage, "PNG", new File("/Users/yehaitao/Desktop/test/程序截图/"+s+".png"));
+							btn.setVisible(true);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					} else { //取消保存
+						
+					}
+				}else{   //弹出提示框，要求先填考号
+					Alert alert = new Alert(AlertType.INFORMATION);
+					alert.setTitle("Design By HaiTao");
+					alert.setHeaderText("");
+					alert.setContentText("请先为考生输入准考证号");
+					alert.showAndWait();
+				}
+			}
+		});
+		
+		Button faceBtn = new Button("人脸识别");
+		faceBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				String score = MyFaceDemo.compareFace(bImage, "/Users/yehaitao/Desktop/6.jpg");
+				int iscore;
+				if(score.contains(".")){
+					
+					String[] ss = score.split("\\.");
+					iscore =Integer.parseInt(ss[0]);
+					
+				}else{
+					iscore = Integer.parseInt(score);
 				}
 				
-				Alert alert = new Alert(AlertType.INFORMATION);
-				alert.setTitle("Design By Haitao-609715176@qq.com");
-				alert.setHeaderText("恭喜，拍照成功！");
-				alert.setContentText("文件已经存储");
-				alert.showAndWait();
+				if (iscore<50){
+					Alert alert = new Alert(AlertType.INFORMATION);
+					alert.setTitle("Design By HaiTao");
+					alert.setHeaderText("");
+					alert.setContentText("疑似不是本人！！与本人相似度为+"+score);
+					alert.showAndWait();
+					actiontarget.setFill(Color.FIREBRICK);// 将文字颜色变成 firebrick red
+					actiontarget.setText("与本人相似度为+"+score);
+				}else{
+					Alert alert = new Alert(AlertType.INFORMATION);
+					alert.setTitle("Design By HaiTao");
+					alert.setHeaderText("");
+					alert.setContentText("高可信！与本人相似度为+"+score);
+
+					alert.showAndWait();
+					actiontarget.setFill(Color.GREEN);// 将文字颜色变成 firebrick red
+					actiontarget.setText("与本人相似度为+"+score);
+				}
 			}
 		});
 		
 		
+		//显示相机摄像区域
 		WebCamView view = new WebCamView(service);
-		grid.add(view.getView(),4,0,9,4);
+		Node viewNode = view.getView();
+		
+		grid.add(viewNode,4,0,9,4);
+		
+		
+		//显示相机按钮
 		grid.add(startStop, 6, 4);
+		//拍照按钮
 		grid.add(paizhao, 7, 4);
-				
-				
-				
-				
-		Scene scene = new Scene(grid, 550, 270);
+		//保存照片按钮
+		grid.add(savePhotoBtn, 15, 4);
+		//人脸识别按钮
+		grid.add(faceBtn, 18, 4);
+		
+		
+		Scene scene = new Scene(grid, 1100, 550);
 		primaryStage.setScene(scene);
 		primaryStage.show();
 		

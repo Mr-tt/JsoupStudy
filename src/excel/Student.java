@@ -5,6 +5,13 @@ public class Student {
 	private String name; //姓名
 	private String work; //岗位
 	private String idNumber;  //身份证号
+	private String photoUrl;
+	public String getPhotoUrl() {
+		return photoUrl;
+	}
+	public void setPhotoUrl(String photoUrl) {
+		this.photoUrl = photoUrl;
+	}
 	public String getId() {
 		return id;
 	}

@@ -114,9 +114,9 @@ public class MyExcel {
         row.createCell(1).setCellValue(student.getName());
         row.createCell(2).setCellValue(student.getWork());
         row.createCell(3).setCellValue(student.getIdNumber());
-        
+        row.createCell(4).setCellValue("/Users/yehaitao/Desktop/程序截图/"+student.getId()+".png");
         //备份文件
-        FileOutputStream out = new FileOutputStream("/Users/yehaitao/Desktop/write1.xlsx");
+        FileOutputStream out = new FileOutputStream("/Users/yehaitao/Desktop/审核通过名单.xlsx");
 //        FileOutputStream out = new FileOutputStream("D:\\write1.xlsx");
     	// 关闭相应的流
     	wb.write(out);
